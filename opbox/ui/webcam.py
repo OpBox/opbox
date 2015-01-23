@@ -19,11 +19,12 @@ from PyQt4.QtGui import (QHBoxLayout,
 
 
 webcam_size = 640, 480
-refresh_rate = 24.
+# webcam_size = 320, 240
+refresh_rate = 30.
 timer_rate = 5
 videofile = r'C:\Users\cashlab\Documents\data\output.avi'
-codecs = 'MJPG'  # 'DIVX' or 'MJPG' or 'Ysomething'
-write = True
+codecs = 'XVID'  # 'DIVX' or 'MJPG' or 'XVID' or 'IYUV'
+write = False
 
 from sys import exit
 from PyQt4.QtGui import QApplication, QMainWindow
@@ -36,17 +37,17 @@ class Worker(QObject):
 
     @pyqtSlot()
     def start_task(self):
-        print(2)
-        self.cap = VideoCapture(0)
+        print("start_task")
+        self.cap = VideoCapture(1)
         self.cap.set(CAP_PROP_FRAME_WIDTH, webcam_size[0])
         self.cap.set(CAP_PROP_FRAME_HEIGHT, webcam_size[1])
 
         if write:
             fourcc = VideoWriter_fourcc(*codecs)
-            self.out = VideoWriter(videofile, fourcc, refresh_rate, webcam_size)
+            self.out = VideoWriter(videofile, fourcc, refresh_rate,
+                                   webcam_size)
 
         if self.cap.isOpened():
-
             self.timer = QTimer()
             self.timer.setInterval(timer_rate)
             self.timer.timeout.connect(self.run_task)
@@ -56,6 +57,7 @@ class Worker(QObject):
 
         ret, frame = self.cap.read()
         if ret:
+            # do opencv processing
             if write:
                 self.out.write(frame)
             frame = cvtColor(frame, COLOR_BGR2RGB)
@@ -67,7 +69,7 @@ class Worker(QObject):
         self.cap.release()
         if write:
             self.out.release()
-        print("closing")
+        print("stop_task")
 
 
 class ControlPanel(QWidget):
@@ -121,22 +123,16 @@ class Webcam(QWidget):
         thread.started.connect(obj.start_task)
         thread.finished.connect(obj.stop_task)
         thread.start()
-        thread.exec_()
-        thread.quit()  # why does it go here?
+        thread.exec_()  # necessary for QTimer
+        thread.quit()  # necessary in case we close the thread
 
     def stop_acq(self):
         """End acquisition.
         """
-        # self.obj.stop_task()
         self.thread.exit()
 
     def update_webcam(self, frame):
-        """Update the data matrix with the recordings and plot it
-
-        Parameters
-        ----------
-        data : ndarray
-            matrix with the incoming recordings
+        """Update the data matrix with the new frame and plot it
         """
         img = QImage(frame, webcam_size[0], webcam_size[1],
                      QImage.Format_RGB888)
