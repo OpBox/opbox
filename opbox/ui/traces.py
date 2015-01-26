@@ -21,7 +21,6 @@ class Worker(QObject):
 
     @pyqtSlot()
     def start_task(self):
-        print('start task')
         self.reader = DAQmxReader(self.args, self.dataReady.emit)
         self.reader.StartTask()
 

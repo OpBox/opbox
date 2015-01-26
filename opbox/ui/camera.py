@@ -15,8 +15,8 @@ from PyQt4.QtGui import (QImage,
 
 
 videofile = r'C:\Users\cashlab\Documents\data\output.avi'
-codecs = 'XVID'  # 'DIVX' or 'MJPG' or 'XVID' or 'IYUV'
-write = False
+codecs = 'DIVX'  # 'DIVX' or 'MJPG' or 'XVID' or 'IYUV'
+write = True
 
 
 class Worker(QObject):

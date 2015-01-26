@@ -71,7 +71,8 @@ parser.add_argument('--cam_fps', type=int, default=30,
                     help='Frames per second of the camera (default: 30)')
 args = parser.parse_args()
 args.n_chan = _count_channels(args.analoginput)
-args.camera_size = [int(i) for i in args.cam_size.split('x')]
+# make sure it's a tuple
+args.camera_size = tuple(int(i) for i in args.cam_size.split('x'))
 
 
 class MainWindow(QMainWindow):
