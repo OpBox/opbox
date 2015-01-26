@@ -1,5 +1,5 @@
 from numpy import arange, zeros, ndarray, NaN, isnan, append, delete
-# from PyDAQmx.DAQmxFunctions import DAQError
+from PyDAQmx.DAQmxFunctions import DAQError
 from PyQt4.QtCore import Qt, QObject, QThread, pyqtSignal, pyqtSlot
 from PyQt4.QtGui import (QHBoxLayout,
                          QWidget,
@@ -16,11 +16,12 @@ class Worker(QObject):
     dataReady = pyqtSignal(ndarray, float)
 
     def __init__(self, args):
-        super(Worker, self).__init__()
+        super().__init__()
         self.args = args
 
     @pyqtSlot()
     def start_task(self):
+        print('start task')
         self.reader = DAQmxReader(self.args, self.dataReady.emit)
         self.reader.StartTask()
 
@@ -84,7 +85,7 @@ class Traces(QWidget):
         self.data.fill(NaN)
         self.idx = 0
 
-    def start_acq(self):
+    def start(self):
         """Start acquisition by starting a new thread.
         """
         thread = QThread()
@@ -98,7 +99,7 @@ class Traces(QWidget):
         thread.start()
         thread.quit()  # why does it go here?
 
-    def stop_acq(self):
+    def stop(self):
         """End acquisition and close edf file if still open.
         """
         try:

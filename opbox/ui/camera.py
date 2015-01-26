@@ -25,7 +25,7 @@ class Worker(QObject):
     newframe = pyqtSignal(ndarray)
 
     def __init__(self, args):
-        super(Worker, self).__init__()
+        super().__init__()
         self.args = args
 
     @pyqtSlot()
@@ -68,7 +68,7 @@ class Camera(QLabel):
 
     """
     def __init__(self, args):
-        super(Camera, self).__init__()  # py2
+        super().__init__()
         self.args = args
 
         self.setFixedSize(*args.camera_size)

@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 
 from argparse import ArgumentParser
 from os.path import realpath, join, dirname
@@ -18,7 +18,7 @@ VERSION = 2
 # ADD MODULE
 opbox_path = realpath(join(dirname(realpath(__file__)), '..'))
 path.append(opbox_path)
-from opbox.ui import ControlPanel, Camera
+from opbox.ui import ControlPanel, Camera, Traces
 
 
 def _count_channels(analoginput):
@@ -78,7 +78,7 @@ class MainWindow(QMainWindow):
     """Main Window that holds all the widgets (traces with raw signal, camera
     and other behavioral data.)"""
     def __init__(self):
-        super(MainWindow, self).__init__()  # py2
+        super().__init__()
 
         cam = Camera(args)
         dock_cam = QDockWidget('Camera', self)
@@ -86,15 +86,22 @@ class MainWindow(QMainWindow):
         dock_cam.setObjectName('Camera')
         self.addDockWidget(Qt.TopDockWidgetArea, dock_cam)
 
+        daq = Traces(args)
+        dock_daq = QDockWidget('DAQ', self)
+        dock_daq.setWidget(daq)
+        dock_daq.setObjectName('DAQ')
+        self.addDockWidget(Qt.TopDockWidgetArea, dock_daq)
+
         widgets = {'camera': cam,
+                   'daq': daq,
                    }
         self.controlpanel = ControlPanel(widgets)
         self.setCentralWidget(self.controlpanel)
 
-        window_geometry = settings.value('window/geometry').toByteArray()  # idk y we need toByteArray
+        window_geometry = settings.value('window/geometry')
         if window_geometry is not None:
             self.restoreGeometry(window_geometry)
-        window_state = settings.value('window/state').toByteArray()
+        window_state = settings.value('window/state')
         if window_state is not None:
             self.restoreState(window_state, float(VERSION))
 

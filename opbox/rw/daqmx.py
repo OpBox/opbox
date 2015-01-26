@@ -1,20 +1,19 @@
+from __future__ import division  # py2
+
 from numpy import zeros
 
 # package to control NI
 from ctypes import byref  # also in PyDAQmx
-try:
-    from PyDAQmx.DAQmxConstants import (DAQmx_Val_Diff,
-                                        DAQmx_Val_Volts,
-                                        DAQmx_Val_Rising,
-                                        DAQmx_Val_ContSamps,
-                                        DAQmx_Val_Acquired_Into_Buffer,
-                                        DAQmx_Val_GroupByChannel,
-                                        DAQmx_Val_Auto,
-                                        )
-    from PyDAQmx.DAQmxTypes import int32
-    from PyDAQmx.Task import Task
-except NotImplementedError:
-    pass
+from PyDAQmx.DAQmxConstants import (DAQmx_Val_Diff,
+                                    DAQmx_Val_Volts,
+                                    DAQmx_Val_Rising,
+                                    DAQmx_Val_ContSamps,
+                                    DAQmx_Val_Acquired_Into_Buffer,
+                                    DAQmx_Val_GroupByChannel,
+                                    DAQmx_Val_Auto,
+                                    )
+from PyDAQmx.DAQmxTypes import int32
+from PyDAQmx.Task import Task
 
 from .edf import ExportEdf
 

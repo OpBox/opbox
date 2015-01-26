@@ -27,7 +27,9 @@ class ControlPanel(QWidget):
         layout.addWidget(self.push_stop, 1, Qt.AlignTop)
 
     def start(self):
+        self.widgets['daq'].start()
         self.widgets['camera'].start()
 
     def stop(self):
+        self.widgets['daq'].stop()
         self.widgets['camera'].stop()
