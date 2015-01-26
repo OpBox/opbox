@@ -1,16 +1,12 @@
-from functools import partial
-
 from numpy import arange, zeros, ndarray, NaN, isnan, append, delete
-from PyDAQmx.DAQmxFunctions import DAQError
+# from PyDAQmx.DAQmxFunctions import DAQError
 from PyQt4.QtCore import Qt, QObject, QThread, pyqtSignal, pyqtSlot
 from PyQt4.QtGui import (QHBoxLayout,
-                         QPushButton,
-                         QVBoxLayout,
                          QWidget,
                          )
 from pyqtgraph import GraphicsLayoutWidget
 
-from ..io import DAQmxReader
+from ..rw import DAQmxReader
 
 
 class Worker(QObject):
@@ -19,29 +15,14 @@ class Worker(QObject):
     """
     dataReady = pyqtSignal(ndarray, float)
 
+    def __init__(self, args):
+        super(Worker, self).__init__()
+        self.args = args
+
     @pyqtSlot()
-    def start_task(self, args):
-        self.reader = DAQmxReader(args, self.dataReady.emit)
+    def start_task(self):
+        self.reader = DAQmxReader(self.args, self.dataReady.emit)
         self.reader.StartTask()
-
-
-class ControlPanel(QWidget):
-    """Widget to start and stop the recordings.
-    """
-    def __init__(self):
-        super().__init__()
-
-        push = QPushButton()
-        push.setText('Start')
-        self.push_start = push
-
-        push = QPushButton()
-        push.setText('Stop')
-        self.push_stop = push
-
-        layout = QVBoxLayout(self)
-        layout.addWidget(self.push_start)
-        layout.addWidget(self.push_stop, 1, Qt.AlignTop)
 
 
 class Figure(GraphicsLayoutWidget):
@@ -92,15 +73,10 @@ class Traces(QWidget):
         super().__init__()
         self.args = args
 
-        control = ControlPanel()
-        control.push_start.clicked.connect(self.start_acq)
-        control.push_stop.clicked.connect(self.stop_acq)
-
         self.figure = Figure(args.n_chan,
                              arange(0, args.window_size, 1 / args.s_freq))
 
         layout = QHBoxLayout()
-        layout.addWidget(control, 1)
         layout.addWidget(self.figure, 5)
         self.setLayout(layout)
 
@@ -113,12 +89,12 @@ class Traces(QWidget):
         """
         thread = QThread()
         self.thread = thread
-        obj = Worker()
+        obj = Worker(self.args)
         self.obj = obj
         obj.dataReady.connect(self.plot_data)
         obj.moveToThread(thread)
 
-        thread.started.connect(partial(obj.start_task, self.args))
+        thread.started.connect(obj.start_task)
         thread.start()
         thread.quit()  # why does it go here?
 

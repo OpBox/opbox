@@ -2,16 +2,19 @@ from numpy import zeros
 
 # package to control NI
 from ctypes import byref  # also in PyDAQmx
-from PyDAQmx.DAQmxConstants import (DAQmx_Val_Diff,
-                                    DAQmx_Val_Volts,
-                                    DAQmx_Val_Rising,
-                                    DAQmx_Val_ContSamps,
-                                    DAQmx_Val_Acquired_Into_Buffer,
-                                    DAQmx_Val_GroupByChannel,
-                                    DAQmx_Val_Auto,
-                                    )
-from PyDAQmx.DAQmxTypes import int32
-from PyDAQmx.Task import Task
+try:
+    from PyDAQmx.DAQmxConstants import (DAQmx_Val_Diff,
+                                        DAQmx_Val_Volts,
+                                        DAQmx_Val_Rising,
+                                        DAQmx_Val_ContSamps,
+                                        DAQmx_Val_Acquired_Into_Buffer,
+                                        DAQmx_Val_GroupByChannel,
+                                        DAQmx_Val_Auto,
+                                        )
+    from PyDAQmx.DAQmxTypes import int32
+    from PyDAQmx.Task import Task
+except NotImplementedError:
+    pass
 
 from .edf import ExportEdf
 
@@ -27,7 +30,7 @@ class DAQmxReader(Task):
         function to be called when the recording is being read.
     """
     def __init__(self, args, funct):
-        super().__init__()
+        super(DAQmxReader, self).__init__()  # py2
 
         # this line is also in the EDF input
         physicalChannel = (args.dev + '/ai' + args.analoginput).encode('utf-8')
