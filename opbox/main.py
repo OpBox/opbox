@@ -85,12 +85,14 @@ class MainWindow(QMainWindow):
         dock_cam = QDockWidget('Camera', self)
         dock_cam.setWidget(cam)
         dock_cam.setObjectName('Camera')
+        dock_cam.setFeatures(QDockWidget.DockWidgetMovable)
         self.addDockWidget(Qt.TopDockWidgetArea, dock_cam)
 
         daq = Traces(args)
         dock_daq = QDockWidget('DAQ', self)
         dock_daq.setWidget(daq)
         dock_daq.setObjectName('DAQ')
+        dock_daq.setFeatures(QDockWidget.DockWidgetMovable)
         self.addDockWidget(Qt.TopDockWidgetArea, dock_daq)
 
         widgets = {'camera': cam,
