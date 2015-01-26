@@ -1,3 +1,5 @@
+from __future__ import division  # py2
+
 from datetime import datetime
 from struct import pack
 

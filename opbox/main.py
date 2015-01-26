@@ -4,12 +4,21 @@ from argparse import ArgumentParser
 from os.path import realpath, join, dirname
 from sys import path, exit
 
-from PyQt4.QtGui import QApplication, QMainWindow
+from PyQt4.QtCore import (QSettings,
+                          Qt,
+                          )
+from PyQt4.QtGui import (QApplication,
+                         QDockWidget,
+                         QMainWindow,
+                         )
+
+settings = QSettings("OpBox", "OpBox")
+VERSION = 2
 
 # ADD MODULE
 opbox_path = realpath(join(dirname(realpath(__file__)), '..'))
 path.append(opbox_path)
-from opbox.ui import Traces
+from opbox.ui import ControlPanel, Camera, Traces
 
 
 def _count_channels(analoginput):
@@ -30,7 +39,8 @@ def _count_channels(analoginput):
 
 
 # INPUT ARGUMENTS
-parser = ArgumentParser(prog='OpBox', description='GUI to interact with NI DAQ')
+parser = ArgumentParser(prog='OpBox',
+                        description='GUI to interact with NI DAQ')
 parser.add_argument('-d', '--dev', required=True,
                     help='Device name (such as ''Dev1'' or ''Dev2'')')
 parser.add_argument('-a', '--analoginput', required=True,
@@ -53,25 +63,51 @@ parser.add_argument('--timeout', type=float, default=10,
                           'function to read the samples.'))
 parser.add_argument('--edf',
                     help='Filename of the EDF file to create')
+parser.add_argument('--cam_size', type=str, default='320x240',
+                    help='Camera size (default: 320x240)')
+parser.add_argument('--cam_timer', type=int, default=5,
+                    help='How often the camera should be read, in ms (default: 5)')
+parser.add_argument('--cam_fps', type=int, default=30,
+                    help='Frames per second of the camera (default: 30)')
 args = parser.parse_args()
 args.n_chan = _count_channels(args.analoginput)
+args.camera_size = [int(i) for i in args.cam_size.split('x')]
 
 
 class MainWindow(QMainWindow):
-    """Main Window that holds all the widgets (traces with raw signal, webcam
+    """Main Window that holds all the widgets (traces with raw signal, camera
     and other behavioral data.)"""
     def __init__(self):
         super().__init__()
-        self.traces = Traces(args)
-        self.setCentralWidget(self.traces)
+
+        cam = Camera(args)
+        dock_cam = QDockWidget('Camera', self)
+        dock_cam.setWidget(cam)
+        dock_cam.setObjectName('Camera')
+        self.addDockWidget(Qt.TopDockWidgetArea, dock_cam)
+
+        daq = Traces(args)
+        dock_daq = QDockWidget('DAQ', self)
+        dock_daq.setWidget(daq)
+        dock_daq.setObjectName('DAQ')
+        self.addDockWidget(Qt.TopDockWidgetArea, dock_daq)
+
+        widgets = {'camera': cam,
+                   'daq': daq,
+                   }
+        self.controlpanel = ControlPanel(widgets)
+        self.setCentralWidget(self.controlpanel)
+
+        window_geometry = settings.value('window/geometry')
+        if window_geometry is not None:
+            self.restoreGeometry(window_geometry)
+        window_state = settings.value('window/state')
+        if window_state is not None:
+            self.restoreState(window_state, float(VERSION))
 
     def closeEvent(self, event):
-        """Make it more robust. It stops the connection and file when user
-        closes the window."""
-        try:
-            self.traces.stop_acq()
-        except AttributeError:  # task not initialized
-            pass
+        settings.setValue('window/geometry', self.saveGeometry())
+        settings.setValue('window/state', self.saveState(float(VERSION)))
         event.accept()
 
 
