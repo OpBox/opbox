@@ -1,5 +1,3 @@
-from __future__ import division  # py2
-
 from numpy import zeros
 
 # package to control NI
@@ -29,7 +27,7 @@ class DAQmxReader(Task):
         function to be called when the recording is being read.
     """
     def __init__(self, args, funct):
-        super(DAQmxReader, self).__init__()  # py2
+        super().__init__()
 
         # this line is also in the EDF input
         physicalChannel = (args.dev + '/ai' + args.analoginput).encode('utf-8')
@@ -67,7 +65,7 @@ class DAQmxReader(Task):
         if self.edf is not None:
             self.edf.write(data)
         self.funct(data, self.buffer_size)
-        return 0 # The function should return an integer
+        return 0  # The function should return an integer
 
     def DoneCallback(self, status):
         """Close the recordings, although I'm not sure when this is called.

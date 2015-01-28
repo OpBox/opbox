@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from argparse import ArgumentParser
+from collections import OrderedDict
 from os.path import realpath, join, dirname
 from sys import path, exit
 
@@ -18,7 +19,17 @@ VERSION = 2
 # ADD MODULE
 opbox_path = realpath(join(dirname(realpath(__file__)), '..'))
 path.append(opbox_path)
-from opbox.ui import ControlPanel, Camera, Traces
+from opbox.ui.controlpanel import ControlPanel
+
+try:
+    from opbox.ui.camera import Camera
+except ImportError:
+    Camera = False
+
+try:
+    from opbox.ui.traces import Traces
+except ImportError:
+    Traces = False
 
 
 def _count_channels(analoginput):
@@ -41,9 +52,9 @@ def _count_channels(analoginput):
 # INPUT ARGUMENTS
 parser = ArgumentParser(prog='OpBox',
                         description='GUI to interact with NI DAQ')
-parser.add_argument('-d', '--dev', required=True,
+parser.add_argument('-d', '--dev',
                     help='Device name (such as ''Dev1'' or ''Dev2'')')
-parser.add_argument('-a', '--analoginput', required=True,
+parser.add_argument('-a', '--analoginput',
                     help=('Analog channels to read (such as ''0:2'' for the ' +
                           'first three channels)'))
 parser.add_argument('--s_freq', type=int, default=1000,
@@ -67,10 +78,15 @@ parser.add_argument('--cam_size', type=str, default='320x240',
                     help='Camera size (default: 320x240)')
 parser.add_argument('--cam_timer', type=int, default=5,
                     help='How often the camera should be read, in ms (default: 5)')
+parser.add_argument('--cam_file', type=str,
+                    help='Name of the video file to save (must end in .avi)')
+parser.add_argument('--cam_codecs', type=str, default='DIVX',
+                    help='Codecs implemented in opencv (DIVX or MJPG or XVID or IYUV)')
 parser.add_argument('--cam_fps', type=int, default=30,
                     help='Frames per second of the camera (default: 30)')
 args = parser.parse_args()
-args.n_chan = _count_channels(args.analoginput)
+if args.analoginput:
+    args.n_chan = _count_channels(args.analoginput)
 # make sure it's a tuple
 args.camera_size = tuple(int(i) for i in args.cam_size.split('x'))
 
@@ -81,23 +97,25 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        cam = Camera(args)
-        dock_cam = QDockWidget('Camera', self)
-        dock_cam.setWidget(cam)
-        dock_cam.setObjectName('Camera')
-        dock_cam.setFeatures(QDockWidget.DockWidgetMovable)
-        self.addDockWidget(Qt.TopDockWidgetArea, dock_cam)
+        widgets = OrderedDict()
+        if Camera:
+            cam = Camera(args)
+            dock_cam = QDockWidget('Camera', self)
+            dock_cam.setWidget(cam)
+            dock_cam.setObjectName('Camera')
+            dock_cam.setFeatures(QDockWidget.DockWidgetMovable)
+            self.addDockWidget(Qt.TopDockWidgetArea, dock_cam)
+            widgets['camera'] = cam
 
-        daq = Traces(args)
-        dock_daq = QDockWidget('DAQ', self)
-        dock_daq.setWidget(daq)
-        dock_daq.setObjectName('DAQ')
-        dock_daq.setFeatures(QDockWidget.DockWidgetMovable)
-        self.addDockWidget(Qt.TopDockWidgetArea, dock_daq)
+        if Traces:
+            daq = Traces(args)
+            dock_daq = QDockWidget('DAQ', self)
+            dock_daq.setWidget(daq)
+            dock_daq.setObjectName('DAQ')
+            dock_daq.setFeatures(QDockWidget.DockWidgetMovable)
+            self.addDockWidget(Qt.TopDockWidgetArea, dock_daq)
+            widgets['daq'] = daq
 
-        widgets = {'camera': cam,
-                   'daq': daq,
-                   }
         self.controlpanel = ControlPanel(widgets)
         self.setCentralWidget(self.controlpanel)
 

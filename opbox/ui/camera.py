@@ -14,11 +14,6 @@ from PyQt4.QtGui import (QImage,
                          )
 
 
-videofile = r'C:\Users\cashlab\Documents\data\output.avi'
-codecs = 'DIVX'  # 'DIVX' or 'MJPG' or 'XVID' or 'IYUV'
-write = True
-
-
 class Worker(QObject):
     """
     """
@@ -34,9 +29,10 @@ class Worker(QObject):
         self.cap.set(CAP_PROP_FRAME_WIDTH, self.args.camera_size[0])
         self.cap.set(CAP_PROP_FRAME_HEIGHT, self.args.camera_size[1])
 
-        if write:
-            fourcc = VideoWriter_fourcc(*codecs)
-            self.out = VideoWriter(videofile, fourcc, float(self.args.cam_fps),
+        if self.args.cam_file:
+            fourcc = VideoWriter_fourcc(*self.args.cam_codecs)
+            self.out = VideoWriter(self.args.cam_file, fourcc,
+                                   float(self.args.cam_fps),
                                    self.args.camera_size)
 
         if self.cap.isOpened():
@@ -50,7 +46,7 @@ class Worker(QObject):
         running, frame = self.cap.read()
         if running:
             # do opencv processing
-            if write:
+            if self.args.cam_file:
                 self.out.write(frame)
             frame = cvtColor(frame, COLOR_BGR2RGB)
             self.newframe.emit(frame)
@@ -59,7 +55,7 @@ class Worker(QObject):
     def stop(self):
         self.timer.stop()
         self.cap.release()
-        if write:
+        if self.args.cam_file:
             self.out.release()
 
 
