@@ -4,9 +4,7 @@ from argparse import ArgumentParser
 from os.path import realpath, join, dirname
 from sys import path, exit
 
-from PyQt4.QtCore import (QSettings,
-                          Qt,
-                          )
+from PyQt4.QtCore import Qt
 from PyQt4.QtGui import (QApplication,
                          QDockWidget,
                          QMainWindow,
@@ -15,7 +13,7 @@ from PyQt4.QtGui import (QApplication,
 # ADD MODULE
 opbox_path = realpath(join(dirname(realpath(__file__)), '..'))
 path.append(opbox_path)
-from opbox.ui import Camera
+from opbox.ui.camera import Camera
 
 # INPUT ARGUMENTS
 parser = ArgumentParser(prog='choose_camera',
@@ -29,6 +27,7 @@ parser.add_argument('--cam_timer', type=int, default=5,
 parser.add_argument('--cam_fps', type=int, default=30,
                     help='Frames per second of the camera (default: 30)')
 args = parser.parse_args()
+args.cam_file = False
 args.camera_size = [int(i) for i in args.cam_size.split('x')]
 
 
@@ -37,20 +36,28 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()  # py2
 
-        all_cam = []
+        self.all_cam = []
         for i in range(args.n):
             cam = Camera(args)
             dock_cam = QDockWidget('Camera', self)
             dock_cam.setWidget(cam)
             dock_cam.setObjectName('Camera')
             self.addDockWidget(Qt.TopDockWidgetArea, dock_cam)
-            all_cam.append(cam)
+            self.all_cam.append(cam)
 
-        for one_cam in all_cam:
+        self.show()
+
+        for one_cam in self.all_cam:
             one_cam.start()
+
+    def closeEvent(self, event):
+        for one_cam in self.all_cam:
+            one_cam.stop()
+
+        event.accept()
+
 
 if __name__ == '__main__':
     app = QApplication([])
     window = MainWindow()
-    window.show()
     exit(app.exec_())
